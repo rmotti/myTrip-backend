@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+firebase-admin
+python-dotenv
+SQLAlchemy>=2.0
+psycopg2-binary
