@@ -1,1 +1,3 @@
 # myTrip-backend
+
+Bem-vindo!
