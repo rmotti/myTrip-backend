@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, SmallInteger, Date, Numeric, CHAR, ForeignKey, UniqueConstraint, Index, DateTime, func
+from sqlalchemy import String, Integer, SmallInteger, Date, Numeric, CHAR, ForeignKey, UniqueConstraint, Index, DateTime,Boolean,text, func
 from sqlalchemy.dialects.postgresql import CITEXT
 from app.db import Base
 from datetime import datetime, date
@@ -10,7 +10,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str | None] = mapped_column(String)
     email: Mapped[str] = mapped_column(CITEXT, unique=True, index=True, nullable=False)
-    password_hash: Mapped[str] = mapped_column(String, nullable=False)
+    password_hash: Mapped[str | None] = mapped_column(String, nullable=True)
     firebase_uid: Mapped[str | None] = mapped_column(String, unique=True, index=True, nullable=True)
     photo_url: Mapped[str | None] = mapped_column(String, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, server_default=text("TRUE"), nullable=False)

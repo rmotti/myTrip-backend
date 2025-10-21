@@ -1,10 +1,39 @@
+# app/main.py
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import RedirectResponse
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import OperationalError
-from .db import db_ping
 
-app = FastAPI(title="mytrip-backend (conexão DB)")
+# garante que o Firebase Admin inicialize (usa as envs)
+from app.core import firebase  # noqa: F401
 
+# seus routers
+from app.routers import auth, users
+
+# ping do DB
+from app.db import db_ping
+
+# 1) instanciar o app primeiro
+app = FastAPI(title="mytrip-backend")
+
+# 2) (opcional) CORS – ajuste allow_origins em produção
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+       "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://my-trip-frontend.vercel.app"
+        ],          
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 3) registrar routers
+app.include_router(auth.router)
+app.include_router(users.router)
+
+# 4) rotas utilitárias/health
 @app.get("/", include_in_schema=False)
 def root():
     return RedirectResponse(url="/docs")

@@ -1,18 +1,25 @@
 # alembic/env.py
 from __future__ import annotations
 from pathlib import Path
-import sys
+import sys, os
 from logging.config import fileConfig
-
 from alembic import context
 
 # --- garante que o pacote "app" é importável ---
 BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BASE_DIR))
 
-# --- importe do seu app: Base e FACTORY do engine ---
-from app.db import Base, get_engine  # <--- trocamos engine por get_engine
-import app.models  # garante que todos os modelos registrem no Base.metadata
+# --- carrega variáveis do arquivo .env ---
+from dotenv import load_dotenv
+env_path = BASE_DIR / ".env"
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path)
+else:
+    print(f"Aviso: arquivo .env não encontrado em {env_path}")
+
+# --- importa Base e engine factory do app ---
+from app.db import Base, get_engine
+import app.models  # garante que todos os modelos sejam registrados
 
 # --- config padrão do Alembic ---
 config = context.config
@@ -22,9 +29,22 @@ if config.config_file_name:
 target_metadata = Base.metadata
 
 
+def _get_url() -> str:
+    """Obtém a URL do banco de dados a partir do .env ou do alembic.ini."""
+    env_url = os.getenv("DATABASE_URL")
+    if env_url:
+        # remove aspas duplas do início/fim, se existirem
+        return env_url.strip('"').strip("'")
+    ini_url = config.get_main_option("sqlalchemy.url")
+    if ini_url:
+        return ini_url
+    # fallback: pega do get_engine() do app
+    return str(get_engine().url)
+
+
 def run_migrations_offline() -> None:
-    """Modo offline (sem conexão). Usaremos a URL do engine do app."""
-    url = str(get_engine().url)
+    """Executa as migrações no modo offline."""
+    url = _get_url()
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -38,23 +58,16 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Modo online (com conexão aberta) usando o engine lazy do app."""
+    """Executa as migrações no modo online."""
     engine = get_engine()
-    with engine.connect() as connection:
+    with engine.connect() as connection:  # <-- corrigido aqui!
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
             compare_type=True,
             compare_server_default=True,
-            render_as_batch=True,  # seguro p/ alterações em alguns providers
+            render_as_batch=False,  # útil p/ SQLite; False em Postgres
         )
         with context.begin_transaction():
-            # Exemplo opcional:
-            # connection.exec_driver_sql("CREATE EXTENSION IF NOT EXISTS citext;")
             context.run_migrations()
 
-
-if context.is_offline_mode():
-    run_migrations_offline()
-else:
-    run_migrations_online()
