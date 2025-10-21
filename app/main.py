@@ -13,6 +13,11 @@ def root():
 def favicon():
     return Response(status_code=204)
 
+@app.get("/health")
+def health():
+    db_ping()
+    return {"status": "ok", "db": "neon"}
+
 @app.get("/health/db")
 def health_db():
     try:

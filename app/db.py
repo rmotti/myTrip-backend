@@ -1,29 +1,47 @@
+# app/db.py
+from __future__ import annotations
 from sqlalchemy import create_engine, text
-from sqlalchemy.exc import OperationalError
-from sqlalchemy.orm import declarative_base
-from dotenv import load_dotenv
+from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 
-# Carrega .env (deixe o .env ganhar do ambiente local quando estiver desenvolvendo)
-load_dotenv(override=True)
-
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL não definido")
-
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
-    future=True,
-    # Ajustes úteis em dev:
-    pool_recycle=1800,   # evita conexões velhas
-    pool_size=5,
-    max_overflow=5,
-)
+# Lazy singletons
+_engine = None
+_SessionLocal = None
 
 Base = declarative_base()
 
-def db_ping() -> None:
-    with engine.connect() as conn:
-        conn.execute(text("SELECT 1"))
+def _get_database_url() -> str:
+    url = os.getenv("DATABASE_URL_UNPOOLED") or os.getenv("DATABASE_URL")
+    if not url:
+        raise RuntimeError("DATABASE_URL não definido")
+    if url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+    # SSL obrigatório no Neon
+    if "sslmode=" not in url:
+        sep = "&" if "?" in url else "?"
+        url = f"{url}{sep}sslmode=require"
+    return url
 
+def get_engine():
+    global _engine
+    if _engine is None:
+        _engine = create_engine(
+            _get_database_url(),
+            pool_pre_ping=True,
+            pool_recycle=1800,  # bom p/ serverless
+            future=True,
+        )
+    return _engine
+
+def get_session():
+    global _SessionLocal
+    if _SessionLocal is None:
+        _SessionLocal = sessionmaker(
+            autocommit=False, autoflush=False, bind=get_engine()
+        )
+    return _SessionLocal()
+
+def db_ping() -> None:
+    # chama apenas quando precisar (ex.: /health)
+    with get_engine().connect() as conn:
+        conn.execute(text("SELECT 1"))
