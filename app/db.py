@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import declarative_base
 from dotenv import load_dotenv
 import os
 
@@ -20,6 +21,9 @@ engine = create_engine(
     max_overflow=5,
 )
 
+Base = declarative_base()
+
 def db_ping() -> None:
     with engine.connect() as conn:
         conn.execute(text("SELECT 1"))
+
