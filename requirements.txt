@@ -14,3 +14,4 @@ passlib[bcrypt]==1.7.4
 firebase-admin==6.5.0
 email-validator==2.2.0
 alembic==1.11.1
+python-dotenv==1.0.1

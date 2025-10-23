@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.security import create_access_token
 from app.db import get_db
 from app.models import User
+from app.schemas.auth import TokenOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 bearer = HTTPBearer()
@@ -37,24 +38,22 @@ def _upsert_user_from_firebase(decoded: dict, db: Session) -> User:
         )
         db.add(user)
     else:
-        changed = False
+        # atualização leve do perfil e marca login
         if not user.firebase_uid:
-            user.firebase_uid = uid; changed = True
+            user.firebase_uid = uid
         if name and user.name != name:
-            user.name = name; changed = True
+            user.name = name
         if picture and user.photo_url != picture:
-            user.photo_url = picture; changed = True
+            user.photo_url = picture
         if not user.is_active:
-            user.is_active = True; changed = True
+            user.is_active = True
         user.last_login_at = datetime.now(timezone.utc)
-        if changed:
-            pass
 
     db.commit()
     db.refresh(user)
     return user
 
-@router.post("/exchange")
+@router.post("/exchange", response_model=TokenOut)
 def exchange_token(
     cred: HTTPAuthorizationCredentials = Depends(bearer),
     db: Session = Depends(get_db),
