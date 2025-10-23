@@ -3,16 +3,14 @@ from datetime import date
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models import Trip, User
 from app.schemas.trip import TripCreate, TripOut, TripUpdate
-from app.core.security import decode_access_token  # assume que existe; ajuste se o seu projeto usar outro nome
+from app.core.security import get_current_user  # <-- usa o seu dependency (Firebase/JWT)
 
 router = APIRouter(prefix="/trips", tags=["trips"])
-bearer = HTTPBearer()
 
 
 # ---- Helpers ----
@@ -27,28 +25,6 @@ def _validate_dates(start: Optional[date], end: Optional[date]) -> None:
 def _ensure_owner(trip: Trip, user_id: int) -> None:
     if trip.user_id != user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acesso negado a esta viagem.")
-
-
-# ---- Auth dependency (JWT) ----
-def get_current_user(
-    creds: HTTPAuthorizationCredentials = Depends(bearer),
-    db: Session = Depends(get_db),
-) -> User:
-    """
-    Lê o token Bearer (JWT), decodifica e retorna o usuário.
-    O token deve conter, no mínimo, o claim 'sub' com o user_id.
-    """
-    token = creds.credentials
-    try:
-        payload = decode_access_token(token)  # -> dict com 'sub' (user_id)
-        user_id = int(payload.get("sub"))
-    except Exception:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido.")
-
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuário não encontrado.")
-    return user
 
 
 # ---- Endpoints ----
