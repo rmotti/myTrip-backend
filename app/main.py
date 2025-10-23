@@ -68,7 +68,7 @@ app.include_router(trips_router)
 # 4) rotas utilitárias/health
 @app.get("/", include_in_schema=False)
 def root():
-    return RedirectResponse(url="/docs")
+    return {"message": "MyTrip API running 🚀"}
 
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon():
