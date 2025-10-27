@@ -12,6 +12,9 @@ from app.core import firebase  # noqa: F401
 # seus routers
 from app.routers import auth, users
 from app.routers.trips import router as trips_router
+from app.routers.budget_categories import router as budget_categories_router
+from app.routers.budget_items import router as budget_items_router
+from app.routers.trip_budget_targets import router as trip_budget_targets_router
 
 
 # ping do DB
@@ -64,6 +67,9 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(trips_router)
+app.include_router(budget_categories_router)
+app.include_router(budget_items_router)
+app.include_router(trip_budget_targets_router)
 
 # 4) rotas utilitárias/health
 @app.get("/", include_in_schema=False)
