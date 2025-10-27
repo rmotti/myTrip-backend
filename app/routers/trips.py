@@ -76,6 +76,7 @@ def create_trip(
     trip = Trip(
         user_id=current_user.id,
         name=payload.name,
+        destination=payload.destination,
         start_date=payload.start_date,
         end_date=payload.end_date,
         currency_code=payload.currency_code,

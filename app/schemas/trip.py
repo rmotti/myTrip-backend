@@ -6,6 +6,7 @@ from datetime import date
 # Base (campos comuns)
 class TripBase(BaseModel):
     name: Optional[str] = Field(None, example="Viagem a Paris")
+    destination: Optional[str] = Field(None, example="Paris, França")
     start_date: Optional[date] = Field(None, example="2025-03-10")
     end_date: Optional[date] = Field(None, example="2025-03-17")
     currency_code: Optional[str] = Field(None, example="BRL", min_length=3, max_length=3)

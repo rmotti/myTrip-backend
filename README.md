@@ -35,9 +35,9 @@ API FastAPI do MyTrip. Esta seção lista todos os endpoints para facilitar a in
   - Query: `skip` (int, default 0), `limit` (1–200), `start_from` (date), `end_until` (date)
 - GET `/trips/{trip_id}` — Detalhe de uma viagem do usuário. (requer Bearer)
 - POST `/trips` — Cria viagem. (requer Bearer)
-  - Body: `name` (str), `start_date` (date), `end_date` (date), `currency_code` (str, 3), `total_budget` (float, opcional)
+  - Body: `name` (str), `start_date` (date), `end_date` (date), `currency_code` (str, 3), `destination` (str, opcional), `total_budget` (float, opcional)
 - PUT `/trips/{trip_id}` — Atualiza viagem (parcial). (requer Bearer)
-  - Body (todos opcionais): `name`, `start_date`, `end_date`, `currency_code`, `total_budget`
+  - Body (todos opcionais): `name`, `start_date`, `end_date`, `currency_code`, `destination`, `total_budget`
 - DELETE `/trips/{trip_id}` — Exclui viagem do usuário. (requer Bearer)
 
 **Categorias de Orçamento**
@@ -114,6 +114,7 @@ curl -X POST http://localhost:8000/trips \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Paris",
+    "destination": "Paris, França",
     "start_date": "2025-03-10",
     "end_date": "2025-03-17",
     "currency_code": "EUR",
@@ -126,6 +127,7 @@ curl -X POST http://localhost:8000/trips \
   "id": 10,
   "user_id": 1,
   "name": "Paris",
+  "destination": "Paris, França",
   "start_date": "2025-03-10",
   "end_date": "2025-03-17",
   "currency_code": "EUR",
@@ -259,6 +261,7 @@ curl -X PUT http://localhost:8000/trips/10 \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Paris & Londres",
+    "destination": "Paris, França; Londres, Reino Unido",
     "total_budget": 6500
   }'
 ```
@@ -268,6 +271,7 @@ curl -X PUT http://localhost:8000/trips/10 \
   "id": 10,
   "user_id": 1,
   "name": "Paris & Londres",
+  "destination": "Paris, França; Londres, Reino Unido",
   "start_date": "2025-03-10",
   "end_date": "2025-03-17",
   "currency_code": "EUR",

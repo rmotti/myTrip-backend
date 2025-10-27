@@ -23,6 +23,7 @@ class Trip(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     name: Mapped[str | None] = mapped_column(String)
+    destination: Mapped[str | None] = mapped_column(String)
     start_date: Mapped[date | None] = mapped_column(Date)
     end_date: Mapped[date | None] = mapped_column(Date)
     currency_code: Mapped[str | None] = mapped_column(CHAR(3), index=True)
