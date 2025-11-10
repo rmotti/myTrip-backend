@@ -1,5 +1,5 @@
 # app/schemas/user.py
-from pydantic import BaseModel, EmailStr, HttpUrl
+from pydantic import BaseModel, EmailStr, HttpUrl, ConfigDict
 from typing import Optional
 
 class UserBase(BaseModel):
@@ -12,8 +12,7 @@ class UserOut(UserBase):
     firebase_uid: Optional[str] = None
     is_active: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class UserUpdate(UserBase):
     pass

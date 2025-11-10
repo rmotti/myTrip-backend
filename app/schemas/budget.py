@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 # ---- Budget Categories ----
@@ -12,8 +12,7 @@ class BudgetCategoryOut(BaseModel):
     key: str
     label: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ---- Budget Items ----
@@ -37,8 +36,7 @@ class BudgetItemOut(BudgetItemBase):
     id: int
     trip_id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ---- Trip Budget Targets ----
@@ -61,5 +59,4 @@ class TripBudgetTargetOut(BaseModel):
     category_id: int
     planned_amount: float
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
