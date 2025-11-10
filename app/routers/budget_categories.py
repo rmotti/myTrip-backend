@@ -18,4 +18,3 @@ def list_budget_categories(
 ):
     categories = db.query(BudgetCategory).order_by(BudgetCategory.key.asc()).all()
     return categories
-
