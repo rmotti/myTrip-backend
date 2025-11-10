@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from typing import Optional
-from pydantic import BaseModel, Field, condecimal, constr, ConfigDict
+from pydantic import BaseModel, Field, condecimal, constr, ConfigDict, field_serializer
 
 # Casa com NUMERIC(12,2) do banco
 Money = condecimal(max_digits=12, decimal_places=2)
@@ -56,6 +56,10 @@ class BudgetItemOut(BaseModel):
     # Pydantic v2
     model_config = ConfigDict(from_attributes=True)
 
+    @field_serializer("planned_amount", "actual_amount", when_used="json")
+    def _ser_money(self, v):
+        return float(v) if v is not None else 0.0
+
 
 # ---- Trip Budget Targets ----
 class TripBudgetTargetBase(BaseModel):
@@ -79,3 +83,7 @@ class TripBudgetTargetOut(BaseModel):
 
     # Pydantic v2
     model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("planned_amount", when_used="json")
+    def _ser_money(self, v):
+        return float(v) if v is not None else 0.0
