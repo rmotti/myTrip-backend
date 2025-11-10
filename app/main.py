@@ -55,9 +55,20 @@ def _cors_origins() -> list[str]:
     return sorted(defaults)
 
 
+def _cors_origin_regex() -> str | None:
+    # Permite configurar um regex via env (útil para previews do Vercel)
+    # Ex.: CORS_ORIGIN_REGEX="https://my-trip-frontend.*\\.vercel\\.app"
+    val = os.getenv("CORS_ORIGIN_REGEX", "").strip()
+    if val:
+        return val
+    # Cobrir domínios de preview do Vercel do frontend por padrão
+    return r"https://my-trip-frontend.*\.vercel\.app"
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins(),
+    allow_origin_regex=_cors_origin_regex(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
