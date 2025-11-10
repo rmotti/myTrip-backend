@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 from typing import Optional
+from pydantic import BaseModel, Field, condecimal, constr
 
-from pydantic import BaseModel, Field
-
+Money = condecimal(max_digits=10, decimal_places=2)
 
 # ---- Budget Categories ----
 class BudgetCategoryOut(BaseModel):
@@ -19,23 +20,37 @@ class BudgetCategoryOut(BaseModel):
 # ---- Budget Items ----
 class BudgetItemBase(BaseModel):
     category_id: Optional[int] = Field(None, description="Categoria do item")
-    title: Optional[str] = None
-    planned_amount: Optional[float] = None
-    actual_amount: Optional[float] = None
+    title: Optional[constr(min_length=1)] = None
+    planned_amount: Optional[Money] = None
+    actual_amount: Optional[Money] = None
     date: Optional[date] = None
 
 
-class BudgetItemCreate(BudgetItemBase):
+class BudgetItemCreate(BaseModel):
     category_id: int
+    title: constr(min_length=1)
+    planned_amount: Money
+    # default 0.00 evita 422 quando o front não mandar este campo
+    actual_amount: Money = Field(default=Decimal("0.00"))
+    date: Optional[date] = None
 
 
-class BudgetItemUpdate(BudgetItemBase):
-    pass
+class BudgetItemUpdate(BaseModel):
+    category_id: Optional[int] = None
+    title: Optional[constr(min_length=1)] = None
+    planned_amount: Optional[Money] = None
+    actual_amount: Optional[Money] = None
+    date: Optional[date] = None
 
 
-class BudgetItemOut(BudgetItemBase):
+class BudgetItemOut(BaseModel):
     id: int
     trip_id: int
+    category_id: int
+    title: str
+    planned_amount: Money
+    actual_amount: Money
+    date: Optional[date] = None
 
     class Config:
         from_attributes = True
@@ -44,7 +59,7 @@ class BudgetItemOut(BudgetItemBase):
 # ---- Trip Budget Targets ----
 class TripBudgetTargetBase(BaseModel):
     category_id: int
-    planned_amount: float
+    planned_amount: Money
 
 
 class TripBudgetTargetCreate(TripBudgetTargetBase):
@@ -52,15 +67,14 @@ class TripBudgetTargetCreate(TripBudgetTargetBase):
 
 
 class TripBudgetTargetUpdate(BaseModel):
-    planned_amount: Optional[float] = None
+    planned_amount: Optional[Money] = None
 
 
 class TripBudgetTargetOut(BaseModel):
     id: int
     trip_id: int
     category_id: int
-    planned_amount: float
+    planned_amount: Money
 
     class Config:
         from_attributes = True
-
