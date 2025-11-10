@@ -1,9 +1,8 @@
 # app/main.py
-from fastapi import FastAPI, HTTPException, Response, Request
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi import FastAPI, HTTPException, Response
+from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import OperationalError
-import logging
 import os
 from datetime import datetime, timezone  # NEW
 
@@ -124,10 +123,3 @@ def health_app():
         "region": _env("VERCEL_REGION", _env("RAILWAY_REGION", _env("FLY_REGION", ""))),
         "node": _env("HOSTNAME", ""),
     }
-
-
-# ---- Optional: global exception handler for debugging ---- #
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logging.exception("Unhandled error at %s %s", request.method, request.url)
-    return JSONResponse(status_code=500, content={"detail": str(exc)})
