@@ -1,5 +1,5 @@
-# app/routers/budget_items.py
 from datetime import date, datetime
+from decimal import Decimal
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
@@ -50,20 +50,34 @@ def _parse_date(value) -> Optional[date]:
             return datetime.fromisoformat(value.replace("Z", "+00:00")).date()
         except Exception:
             pass
-    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Formato de data inválido (use YYYY-MM-DD ou null).")
+    raise HTTPException(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        detail="Formato de data inválido (use YYYY-MM-DD ou null)."
+    )
 
 
-def _to_number(value, field_name: str) -> float:
-    if value is None:
-        return 0.0
+def _to_decimal(value, field_name: str) -> Decimal:
+    """
+    Converte para Decimal com 2 casas.
+    Aceita int, float, str (com vírgula ou ponto) ou None.
+    """
+    if value is None or value == "":
+        return Decimal("0.00")
+    if isinstance(value, Decimal):
+        return value.quantize(Decimal("0.01"))
     if isinstance(value, (int, float)):
-        return float(value)
+        # cuidado com float → converte via str para evitar binário
+        return Decimal(str(value)).quantize(Decimal("0.01"))
     if isinstance(value, str):
         try:
-            return float(value.replace(",", "."))
-        except ValueError:
+            v = value.replace(",", ".")
+            return Decimal(v).quantize(Decimal("0.01"))
+        except Exception:
             pass
-    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Campo '{field_name}' deve ser numérico.")
+    raise HTTPException(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        detail=f"Campo '{field_name}' deve ser numérico."
+    )
 
 
 def _normalize_create_payload(raw: dict) -> dict:
@@ -90,8 +104,8 @@ def _normalize_create_payload(raw: dict) -> dict:
 
     title = (raw.get("title") or "").strip()
 
-    planned_amount = _to_number(raw.get("planned_amount"), "planned_amount")
-    actual_amount = _to_number(raw.get("actual_amount", 0), "actual_amount")
+    planned_amount = _to_decimal(raw.get("planned_amount"), "planned_amount")
+    actual_amount = _to_decimal(raw.get("actual_amount", 0), "actual_amount")
 
     date_value = _parse_date(raw.get("date"))
 
@@ -117,6 +131,7 @@ def list_items(
 ):
     trip = _get_trip_or_404(db, trip_id)
     _ensure_owner(trip, current_user.id)
+
     q = db.query(BudgetItem).filter(BudgetItem.trip_id == trip_id)
     if date_from:
         q = q.filter(BudgetItem.date >= date_from)
@@ -125,11 +140,12 @@ def list_items(
     if category_id is not None:
         q = q.filter(BudgetItem.category_id == category_id)
 
+    # Ordenação portável (evita nullslast nativo)
     items = (
-        q.order_by(BudgetItem.date.asc().nullslast(), BudgetItem.id.asc())
-        .offset(skip)
-        .limit(limit)
-        .all()
+        q.order_by(BudgetItem.date.is_(None), BudgetItem.date.asc(), BudgetItem.id.asc())
+         .offset(skip)
+         .limit(limit)
+         .all()
     )
     return items
 
@@ -157,8 +173,8 @@ def create_item(
         trip_id=trip_id,  # força trip_id da URL
         category_id=data["category_id"],
         title=data["title"],
-        planned_amount=data["planned_amount"],
-        actual_amount=data["actual_amount"],
+        planned_amount=data["planned_amount"],   # Decimal
+        actual_amount=data["actual_amount"],     # Decimal
         date=data["date"],  # pode ser None
     )
     db.add(item)
@@ -188,9 +204,9 @@ def update_item(
         data["date"] = _parse_date(data["date"])
 
     if "planned_amount" in data:
-        data["planned_amount"] = _to_number(data["planned_amount"], "planned_amount")
+        data["planned_amount"] = _to_decimal(data["planned_amount"], "planned_amount")
     if "actual_amount" in data:
-        data["actual_amount"] = _to_number(data["actual_amount"], "actual_amount")
+        data["actual_amount"] = _to_decimal(data["actual_amount"], "actual_amount")
 
     if "category_id" in data and data["category_id"] is not None:
         try:

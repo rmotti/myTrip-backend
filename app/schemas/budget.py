@@ -3,9 +3,10 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from typing import Optional
-from pydantic import BaseModel, Field, condecimal, constr
+from pydantic import BaseModel, Field, condecimal, constr, ConfigDict
 
-Money = condecimal(max_digits=10, decimal_places=2)
+# Casa com NUMERIC(12,2) do banco
+Money = condecimal(max_digits=12, decimal_places=2)
 
 # ---- Budget Categories ----
 class BudgetCategoryOut(BaseModel):
@@ -13,8 +14,8 @@ class BudgetCategoryOut(BaseModel):
     key: str
     label: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    # Pydantic v2
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ---- Budget Items ----
@@ -52,8 +53,8 @@ class BudgetItemOut(BaseModel):
     actual_amount: Money
     date: Optional[date] = None
 
-    class Config:
-        from_attributes = True
+    # Pydantic v2
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ---- Trip Budget Targets ----
@@ -76,5 +77,5 @@ class TripBudgetTargetOut(BaseModel):
     category_id: int
     planned_amount: Money
 
-    class Config:
-        from_attributes = True
+    # Pydantic v2
+    model_config = ConfigDict(from_attributes=True)
