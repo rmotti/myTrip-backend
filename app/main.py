@@ -3,8 +3,8 @@ from fastapi import FastAPI, HTTPException, Response, Request
 from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import OperationalError
-import os
 import logging
+import os
 from datetime import datetime, timezone  # NEW
 
 # garante que o Firebase Admin inicialize (usa as envs)
